@@ -20,6 +20,10 @@ namespace API.Extensions
             services.AddIdentityCore<AppUser>(opt =>
             {
                 // Add identity options here
+                opt.Password.RequiredLength = 8;
+                opt.Password.RequireNonAlphanumeric = true;
+                opt.Password.RequireDigit = true;
+                opt.Password.RequireUppercase = true;
             })
             .AddEntityFrameworkStores<AppIdentityDbContext>()
             .AddSignInManager<SignInManager<AppUser>>();
