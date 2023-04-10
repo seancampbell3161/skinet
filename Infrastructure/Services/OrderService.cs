@@ -18,7 +18,6 @@ namespace Infrastructure.Services
 
         public async Task<Order> CreateOrderAsync(string buyerEmail, int deliveryMethodId, string basketId, Address shippingAddress)
         {
-            // get basket from repo
             var basket = await _basketRepo.GetBasketAsync(basketId);
 
             // get items from product repo
@@ -31,25 +30,30 @@ namespace Infrastructure.Services
                 items.Add(orderItem);
             }
 
-            // get delivery method from repo
             var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
 
-            // calc subtotal
             var subtotal = items.Sum(i => i.Price * i.Quantity);
 
-            // create order
-            var order = new Order(buyerEmail, shippingAddress, deliveryMethod, items, subtotal);
-            _unitOfWork.Repository<Order>().Add(order);
+            var spec = new OrderByPaymentIntentIdSpecification(basket.PaymentIntentId);
+            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
 
-            // TODO: save to db
+            if (order != null)
+            {
+                order.ShipToAddress = shippingAddress;
+                order.DeliveryMethod = deliveryMethod;
+                order.Subtotal = subtotal;
+
+                _unitOfWork.Repository<Order>().Update(order);
+            }
+            else
+            {
+                order = new Order(buyerEmail, shippingAddress, deliveryMethod, items, subtotal, basket.PaymentIntentId);
+                _unitOfWork.Repository<Order>().Add(order);
+            }
+
             var result = await _unitOfWork.Complete();
-
             if (result <= 0) return null;
 
-            // delete basket
-            await _basketRepo.DeleteBasketAsync(basketId);
-
-            // return order
             return order;
         }
 
