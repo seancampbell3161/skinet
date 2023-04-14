@@ -3,13 +3,14 @@
         <section class="col-3">
             <h5 class="text-warning ms-3">Sort</h5>
             <select class="form-select mb-4" (change)="onSortSelected($event)">
-                <option *ngFor="let sort of sortOptions" [value]="sort.value">{{sort.name}}</option>
+                <option *ngFor="let sort of sortOptions"
+                    [selected]="shopParams.sort === sort.value"
+                    [value]="sort.value">{{sort.name}}</option>
             </select>
 
             <h5 class="text-warning ms-3">Brands</h5>
             <ul class="list-group my-3">
                 <li class="list-group-item"
-                    style="cursor:pointer;"
                     *ngFor="let brand of brands"
                     [class.active]="brand.id === shopParams.brandId"
                     [value]="brand.id"
@@ -49,7 +50,9 @@
             </div>
 
             <div *ngIf="totalCount > 0" class="d-flex justify-content-center">
-                <app-pager [totalCount]="totalCount" 
+                <app-pager
+                    [pageNumber]="shopParams.pageNumber"
+                    [totalCount]="totalCount" 
                     [pageSize]="shopParams.pageSize" 
                     (pageChanged)="onPageChange($event)">               
                 </app-pager>
